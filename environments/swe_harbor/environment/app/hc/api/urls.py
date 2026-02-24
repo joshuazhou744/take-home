@@ -47,6 +47,7 @@ slug_urls = [
 
 api_urls = [
     path("checks/", views.checks),
+    path("checks/bulk/", views.bulk_checks, name="hc-api-bulk-checks"),
     path("checks/<uuid:code>", views.single, name="hc-api-single"),
     path("checks/<sha1:unique_key>", views.get_check_by_unique_key),
     path("checks/<uuid:code>/pause", views.pause, name="hc-api-pause"),

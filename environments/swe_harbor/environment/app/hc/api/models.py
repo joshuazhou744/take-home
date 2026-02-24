@@ -202,6 +202,7 @@ class Check(models.Model):
     has_confirmation_link = models.BooleanField(default=False)
     alert_after = models.DateTimeField(null=True, blank=True, editable=False)
     status = models.CharField(max_length=6, choices=STATUSES, default="new")
+    last_bulk_action = models.CharField(max_length=10, null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -402,6 +403,7 @@ class Check(models.Model):
             "failure_kw": self.failure_kw,
             "filter_subject": self.filter_subject,
             "filter_body": self.filter_body,
+            "last_bulk_action": self.last_bulk_action,
         }
 
         if self.last_duration:

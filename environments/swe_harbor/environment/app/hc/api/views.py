@@ -919,3 +919,63 @@ def bounces(request: HttpRequest) -> HttpResponse:
         profile.save()
 
     return HttpResponse("OK")
+
+
+@cors("POST")
+@csrf_exempt
+@authorize
+def bulk_checks(request: ApiRequest) -> HttpResponse:
+    codes = request.json.get("codes")
+    if codes is None or (isinstance(codes, list) and len(codes) == 0):
+        return JsonResponse({"error": "missing or empty codes list"}, status=400)
+    if not isinstance(codes, list):
+        return JsonResponse({"error": "codes must be a list"}, status=400)
+
+    action = request.json.get("action")
+    if action not in ("pause", "resume", "delete"):
+        return JsonResponse({"error": "missing or invalid action"}, status=400)
+
+    checks = []
+    for code_str in codes:
+        try:
+            check = Check.objects.get(code=code_str)
+        except (Check.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({"error": "check not found"}, status=404)
+        if check.project_id != request.project.id:
+            return HttpResponseForbidden()
+        checks.append(check)
+
+    if action == "pause":
+        for check in checks:
+            check.create_flip("paused", mark_as_processed=True)
+            check.status = "paused"
+            check.last_start = None
+            check.alert_after = None
+            check.last_bulk_action = "pause"
+            check.save()
+        request.project.update_next_nag_dates()
+        return JsonResponse({"paused": len(checks)})
+
+    if action == "resume":
+        resumed = 0
+        skipped = 0
+        for check in checks:
+            if check.manual_resume:
+                check.last_bulk_action = "resume"
+                check.save()
+                skipped += 1
+            else:
+                check.create_flip("new", mark_as_processed=True)
+                check.status = "new"
+                check.last_start = None
+                check.last_ping = None
+                check.alert_after = None
+                check.last_bulk_action = "resume"
+                check.save()
+                resumed += 1
+        return JsonResponse({"resumed": resumed, "skipped": skipped})
+
+    # action == "delete"
+    for check in checks:
+        check.lock_and_delete()
+    return JsonResponse({"deleted": len(checks)})
