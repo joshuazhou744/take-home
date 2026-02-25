@@ -1311,3 +1311,27 @@ class TokenBucket(models.Model):
         # During that period, allow the code to only be used once,
         # so an eavesdropping attacker cannot reuse a code.
         return TokenBucket.authorize(value, 1, 90)
+
+
+class BulkActionLog(models.Model):
+    code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    project = models.ForeignKey(
+        Project, models.SET_NULL, null=True, related_name="bulk_action_logs"
+    )
+    action = models.CharField(max_length=10)
+    affected = models.IntegerField()
+    skipped = models.IntegerField(default=0)
+    created = models.DateTimeField(default=now)
+
+    class Meta:
+        ordering = ["-created"]
+
+    def to_dict(self) -> dict:
+        return {
+            "uuid": str(self.code),
+            "project": str(self.project.code) if self.project else None,
+            "action": self.action,
+            "affected": self.affected,
+            "skipped": self.skipped,
+            "created": isostring(self.created),
+        }

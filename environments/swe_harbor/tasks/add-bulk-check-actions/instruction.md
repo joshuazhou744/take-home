@@ -6,6 +6,11 @@ Add the ability to perform bulk actions on multiple checks at once via the REST 
 
 ## Requirements
 
+- Create `BulkActionLog` model in `/app/hc/api/models.py` to record each bulk operation. 
+    - Track which project performed it, the action name, how many checks were affected, how many were skipped (for resume), and when it happened.
+    - Make a `to_dict()` method using `isostring()` for the timestamp.
+    - If the project gets deleted, keep the log around (don't cascade).
+    - Create a log entry after every successful bulk action.
 - Add a `last_bulk_action` field (nullable CharField, max 10 characters) to the `Check` model in `/app/hc/api/models.py`
     - Also add the field to `Check.to_dict()`.
     - Generate and run the migration.
@@ -19,5 +24,6 @@ Add the ability to perform bulk actions on multiple checks at once via the REST 
   - `resume` → `{"resumed": <count>, "skipped": <count>}`
   - `delete` → `{"deleted": <count>}`
 - Add the URL route for the endpoint.
+- Generate and run the migration for `BulkActionLog` together with `last_bulk_action`.
 
 Don't modify existing tests. Follow existing codebase patterns for decorators, error responses, and authorization.

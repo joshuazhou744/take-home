@@ -37,7 +37,7 @@ from pydantic_core import PydanticCustomError
 from hc.accounts.models import Profile, Project
 from hc.api.decorators import ApiRequest, authorize, authorize_read, cors
 from hc.api.forms import FlipsFiltersForm
-from hc.api.models import MAX_DURATION, Channel, Check, Flip, Notification, Ping
+from hc.api.models import MAX_DURATION, BulkActionLog, Channel, Check, Flip, Notification, Ping
 from hc.lib.badges import check_signature, get_badge_svg, get_badge_url
 from hc.lib.signing import unsign_bounce_id
 from hc.lib.string import is_valid_uuid_string
@@ -954,6 +954,9 @@ def bulk_checks(request: ApiRequest) -> HttpResponse:
             check.last_bulk_action = "pause"
             check.save()
         request.project.update_next_nag_dates()
+        BulkActionLog.objects.create(
+            project=request.project, action="pause", affected=len(checks)
+        )
         return JsonResponse({"paused": len(checks)})
 
     if action == "resume":
@@ -973,9 +976,17 @@ def bulk_checks(request: ApiRequest) -> HttpResponse:
                 check.last_bulk_action = "resume"
                 check.save()
                 resumed += 1
+        BulkActionLog.objects.create(
+            project=request.project, action="resume", affected=resumed, skipped=skipped
+        )
         return JsonResponse({"resumed": resumed, "skipped": skipped})
 
-    # action == "delete"
-    for check in checks:
-        check.lock_and_delete()
-    return JsonResponse({"deleted": len(checks)})
+    if action == "delete":
+        for check in checks:
+            check.lock_and_delete()
+        BulkActionLog.objects.create(
+            project=request.project, action="delete", affected=len(checks)
+        )
+        return JsonResponse({"deleted": len(checks)})
+    
+    return JsonResponse({"error": "unrecognized action"}, status=400)
