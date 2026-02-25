@@ -1,3 +1,13 @@
+# All tests run against the Healthchecks Django app at /app.
+#
+# Tips:
+#   - Extend BaseTestCase for pre-built users/projects/API keys
+#   - Use descriptive test names (test_empty_input, test_duplicate_values, etc.)
+#   - Include informative assertion messages
+#   - Test the happy path, edge cases, and error conditions
+#   - Keep tests independent (no shared mutable state)
+#   - Aim for 20-40 tests
+
 """Tests for the Bulk Check Actions feature."""
 from __future__ import annotations
 
