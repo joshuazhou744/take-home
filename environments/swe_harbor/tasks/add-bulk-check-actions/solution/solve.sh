@@ -14,6 +14,7 @@ new = (
     '    last_bulk_action = models.CharField(max_length=10, null=True, blank=True)'
 )
 
+assert old in content, "patch target not found: status field"
 content = content.replace(old, new, 1)
 
 with open("hc/api/models.py", "w") as f:
@@ -29,6 +30,7 @@ with open("hc/api/models.py", "r") as f:
 old = '            "filter_subject": self.filter_subject,\n            "filter_body": self.filter_body,\n        }'
 new = '            "filter_subject": self.filter_subject,\n            "filter_body": self.filter_body,\n            "last_bulk_action": self.last_bulk_action,\n        }'
 
+assert old in content, "patch target not found: to_dict filter_body"
 content = content.replace(old, new, 1)
 
 with open("hc/api/models.py", "w") as f:
@@ -73,6 +75,7 @@ with open("hc/api/views.py", "r") as f:
 old = "from hc.api.models import MAX_DURATION, Channel, Check, Flip, Notification, Ping"
 new = "from hc.api.models import MAX_DURATION, BulkActionLog, Channel, Check, Flip, Notification, Ping"
 
+assert old in content, "patch target not found: views.py import"
 content = content.replace(old, new, 1)
 
 with open("hc/api/views.py", "w") as f:
@@ -164,6 +167,7 @@ with open("hc/api/urls.py", "r") as f:
 old = '    path("checks/", views.checks),'
 new = '    path("checks/", views.checks),\n    path("checks/bulk/", views.bulk_checks, name="hc-api-bulk-checks"),'
 
+assert old in content, "patch target not found: urls.py checks route"
 content = content.replace(old, new, 1)
 
 with open("hc/api/urls.py", "w") as f:

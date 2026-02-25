@@ -11,6 +11,7 @@ with open("hc/api/models.py", "r") as f:
 old = '            "filter_subject": self.filter_subject,\n            "filter_body": self.filter_body,\n        }'
 new = '            "filter_subject": self.filter_subject,\n            "filter_body": self.filter_body,\n            "maintenance_count": self.maintenance_windows.count(),\n        }'
 
+assert old in content, "patch target not found: to_dict filter_body"
 content = content.replace(old, new, 1)
 
 with open("hc/api/models.py", "w") as f:
@@ -50,6 +51,7 @@ old = '''    def get_status(self, *, with_started: bool = False) -> str:
 
         return "up"'''
 
+assert old in content, "patch target not found: get_status() method"
 new = '''    def get_status(self, *, with_started: bool = False) -> str:
         """Return current status for display."""
         frozen_now = now()
@@ -121,11 +123,13 @@ python3 << 'PATCH'
 with open("hc/api/views.py", "r") as f:
     content = f.read()
 
+assert "import time\n" in content, "patch target not found: views.py import time"
 content = content.replace(
     "import time\n",
     "import json\nimport time\n",
     1,
 )
+assert "from hc.api.models import MAX_DURATION, Channel, Check, Flip, Notification, Ping" in content, "patch target not found: views.py import"
 content = content.replace(
     "from hc.api.models import MAX_DURATION, Channel, Check, Flip, Notification, Ping",
     "from hc.api.models import MAX_DURATION, Channel, Check, Flip, MaintenanceWindow, Notification, Ping",
@@ -174,6 +178,11 @@ def check_maintenance(request: ApiRequest, code: UUID) -> HttpResponse:
     except (ValueError, TypeError):
         return JsonResponse({"error": "invalid datetime format"}, status=400)
 
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+
     if end <= start:
         return JsonResponse({"error": "end must be after start"}, status=400)
 
@@ -214,6 +223,7 @@ new = (
     '    path("checks/<uuid:code>/pings/", views.pings, name="hc-api-pings"),'
 )
 
+assert old in content, "patch target not found: urls.py pings route"
 content = content.replace(old, new, 1)
 
 with open("hc/api/urls.py", "w") as f:

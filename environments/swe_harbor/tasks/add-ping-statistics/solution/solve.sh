@@ -11,6 +11,7 @@ with open("hc/api/models.py", "r") as f:
 old = '''        if self.last_duration:
             result["last_duration"] = int(self.last_duration.total_seconds())'''
 
+assert old in content, "patch target not found: to_dict last_duration"
 new = '''        _total = Ping.objects.filter(owner=self).count()
         _success = Ping.objects.filter(owner=self, kind__isnull=True).count()
         result["ping_success_rate"] = (_success / _total) if _total > 0 else None
@@ -34,6 +35,7 @@ old = '''    def ping(
         self,
         remote_addr: str,'''
 
+assert old in content, "patch target not found: ping() method"
 new = '''    def ping_stats(self) -> dict:
         from collections import defaultdict
         from datetime import timedelta
@@ -132,6 +134,7 @@ new = (
     '    path("checks/<uuid:code>/pings/", views.pings, name="hc-api-pings"),'
 )
 
+assert old in content, "patch target not found: urls.py pings route"
 content = content.replace(old, new, 1)
 
 with open("hc/api/urls.py", "w") as f:
