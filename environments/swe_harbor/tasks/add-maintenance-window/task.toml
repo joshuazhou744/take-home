@@ -1,7 +1,7 @@
 version = "1.0"
 
 [metadata]
-author_name = "Joshua""
+author_name = "Joshua"
 author_email = "joshua@example.com"
 difficulty = "medium"        # easy | medium | hard
 category = "programming"
