@@ -5,7 +5,7 @@ author_name = "Joshua"
 author_email = "joshua@example.com"
 difficulty = "medium"        # easy | medium | hard
 category = "programming"
-tags = ["python", "django", "feature-addition", "model"]
+tags = ["python", "django", "feature-addition", "rest-api"]
 
 [verifier]
 timeout_sec = 180.0
