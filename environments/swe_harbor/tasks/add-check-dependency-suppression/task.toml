@@ -2,10 +2,10 @@ version = "1.0"
 
 [metadata]
 author_name = "Joshua"
-author_email = "joshua@example.com""
+author_email = "joshua@example.com"
 difficulty = "medium"        # easy | medium | hard
 category = "programming"
-tags = ["python", "django", "new_feature"]                  # e.g. ["python", "django", "rest-api"]
+tags = ["python", "django", "feature-addition", "rest-api"]
 
 [verifier]
 timeout_sec = 180.0
