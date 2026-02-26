@@ -1,4 +1,4 @@
-## My tasks
+## Tasks
 
 So I thought of three tasks that varied in complexity throughout the sample repo the agent would work on. The specifics of the three tasks are detailed in a somewhat organized manner in `../plan.md`. Briefly they are:
 
@@ -11,3 +11,22 @@ So I thought of three tasks that varied in complexity throughout the sample repo
 
 
 The implementations were first tested on a branch before creating the corresponding `solve.sh` files. The test suites are comprehensive with model validation. I think these are good examples of tasks that AI should be optimized for. An agent comes in, takes a useful feature a some dev wants to implement and creates a highly customizable template to work off of and flesh out. Much of the integration with existing code logic is handled such that the dev can focus on optimizing implementation of the actual feature rather than figuring out configuration and compatibility.
+
+### Run
+
+```
+docker build -t swe-harbor environment/
+
+# run with soln
+docker run --rm \
+    -v $(pwd)/tasks/TASK_NAME/solution:/solution \
+    -v $(pwd)/tasks/TASK_NAME/tests:/tests \
+    swe-harbor \
+    bash -c "mkdir -p /logs/verifier && cd /app && bash /solution/solve.sh && bash /tests/test.sh && cat /logs/verifier/reward.txt"
+
+# run without soln
+docker run --rm \
+    -v $(pwd)/tasks/TASK_NAME/tests:/tests \
+    swe-harbor \
+    bash -c "mkdir -p /logs/verifier && bash /tests/test.sh && cat /logs/verifier/reward.txt"
+```
