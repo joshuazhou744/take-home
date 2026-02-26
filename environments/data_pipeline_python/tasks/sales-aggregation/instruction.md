@@ -21,9 +21,8 @@ Load `/data/apple_global_sales_dataset.csv`, this is a dataset of Apple's global
 
 ## Your tasks
 Load the CSV and compute the following. Store each result as the named variable.
-
-`category_revenue` — `pd.Series`: total `revenue_usd` per category, sorted descending. Make the index the category name.
-`top_category` — `str`: category with the highest total revenue.
-`region_revenue` — `pd.Series`: total `revenue_usd` per region, sorted descending. Make the index the region name.
-`peak_quarter` — `str`: the year and quarter with the highest total revenue, formatted as `"YYYY-QN"`.
-`top_country_by_units` — `str`: the country with the most total `units_sold`.
+1. `category_revenue` — `pd.Series`: total `revenue_usd` per category, sorted descending. Make the index the category name.
+2. `top_category` — `str`: category with the highest total revenue.
+3. `region_revenue` — `pd.Series`: total `revenue_usd` per region, sorted descending. Make the index the region name.
+4. `peak_quarter` — `str`: the year and quarter with the highest total revenue, formatted as `"YYYY-QN"`.
+5. `top_country_by_units` — `str`: the country with the most total `units_sold`.
