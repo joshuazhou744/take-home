@@ -2,7 +2,7 @@
 
 The Healthchecks codebase is at `/app/`.
 
-Add per-check SLA (Service Level Agreement) tracking. Checks can have a target uptime percentage, and the API returns a month-by-month breakdown showing whether each month's actual uptime met the target.
+Add per-check SLA (Service Level Agreement) tracking. Checks can have a target uptime percentage, and the API returns a monthly breakdown showing whether each month's actual uptime met the target.
 
 ## Requirements
 
@@ -23,4 +23,4 @@ Add per-check SLA (Service Level Agreement) tracking. Checks can have a target u
 - Handle both GET and POST in a single view named `check_sla`. Add the URL route.
 - Return 403 if the check belongs to a different project than the API key. Return 404 if the check does not exist.
 
-Don't modify existing tests. Follow existing codebase patterns for decorators, **error responses**, return statuses, and authorization.
+Don't modify existing tests. Follow existing codebase patterns for decorators, error responses, return statuses, and authorization.
