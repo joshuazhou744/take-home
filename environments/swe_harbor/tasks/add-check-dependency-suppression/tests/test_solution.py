@@ -1,4 +1,4 @@
-"""Tests for the Check Dependency Suppression feature."""
+"""Tests for the check dependency suppression feature."""
 from __future__ import annotations
 
 import json
@@ -19,7 +19,6 @@ from hc.test import BaseTestCase
 
 class CheckDependencyModelTestCase(BaseTestCase):
     """Tests for the CheckDependency model."""
-
     def setUp(self):
         super().setUp()
         self.check = Check.objects.create(project=self.project, name="Check A")
@@ -31,34 +30,34 @@ class CheckDependencyModelTestCase(BaseTestCase):
 
     def test_create_dependency(self):
         """Can create a CheckDependency linking two checks."""
-        dep = CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        dep = CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         self.assertIsNotNone(dep.code)
-        self.assertEqual(dep.check, self.check)
+        self.assertEqual(dep.owner, self.check)
         self.assertEqual(dep.depends_on, self.dep_check)
 
     def test_to_dict_keys(self):
         """to_dict() should return uuid, check, depends_on, and created."""
-        dep = CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        dep = CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         d = dep.to_dict()
         for key in ("uuid", "check", "depends_on", "created"):
             self.assertIn(key, d, f"Missing key: {key}")
 
     def test_to_dict_check_is_uuid_string(self):
         """to_dict() check should be the check's UUID string."""
-        dep = CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        dep = CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         self.assertEqual(dep.to_dict()["check"], str(self.check.code))
 
     def test_to_dict_depends_on_is_uuid_string(self):
         """to_dict() depends_on should be the dependency's UUID string."""
-        dep = CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        dep = CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         self.assertEqual(dep.to_dict()["depends_on"], str(self.dep_check.code))
 
     def test_unique_together_enforced(self):
         """Creating a duplicate dependency should raise an error."""
         from django.db import IntegrityError
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         with self.assertRaises(IntegrityError):
-            CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+            CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
 
     def test_cascade_delete_on_check(self):
         """Deleting the check should delete its dependencies."""
@@ -68,7 +67,7 @@ class CheckDependencyModelTestCase(BaseTestCase):
         project = Project.objects.create(owner=user)
         check_a = Check.objects.create(project=project, name="A")
         check_b = Check.objects.create(project=project, name="B")
-        dep = CheckDependency.objects.create(check=check_a, depends_on=check_b)
+        dep = CheckDependency.objects.create(owner=check_a, depends_on=check_b)
         dep_id = dep.id
         check_a.delete()
         self.assertFalse(CheckDependency.objects.filter(id=dep_id).exists())
@@ -81,7 +80,7 @@ class CheckDependencyModelTestCase(BaseTestCase):
         project = Project.objects.create(owner=user)
         check_a = Check.objects.create(project=project, name="A")
         check_b = Check.objects.create(project=project, name="B")
-        dep = CheckDependency.objects.create(check=check_a, depends_on=check_b)
+        dep = CheckDependency.objects.create(owner=check_a, depends_on=check_b)
         dep_id = dep.id
         check_b.delete()
         self.assertFalse(CheckDependency.objects.filter(id=dep_id).exists())
@@ -89,7 +88,6 @@ class CheckDependencyModelTestCase(BaseTestCase):
 
 class DependenciesToDictTestCase(BaseTestCase):
     """Tests for the dependencies key in Check.to_dict()."""
-
     def setUp(self):
         super().setUp()
         self.check = Check.objects.create(project=self.project, name="Check A")
@@ -105,15 +103,15 @@ class DependenciesToDictTestCase(BaseTestCase):
 
     def test_dependencies_shows_uuid_strings(self):
         """dependencies should list UUID strings of depends_on checks."""
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         deps = self.check.to_dict()["dependencies"]
         self.assertIn(str(self.dep_check.code), deps)
 
     def test_dependencies_count_matches(self):
         """dependencies list length should match the number of dependencies."""
         extra = Check.objects.create(project=self.project, name="Check C")
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
-        CheckDependency.objects.create(check=self.check, depends_on=extra)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=extra)
         self.assertEqual(len(self.check.to_dict()["dependencies"]), 2)
 
 
@@ -150,7 +148,7 @@ class AddDependencyApiTestCase(BaseTestCase):
         """POST should create a CheckDependency in the database."""
         self._post({"depends_on": str(self.dep_check.code)})
         self.assertTrue(
-            CheckDependency.objects.filter(check=self.check, depends_on=self.dep_check).exists()
+            CheckDependency.objects.filter(owner=self.check, depends_on=self.dep_check).exists()
         )
 
     def test_post_no_api_key_returns_401(self):
@@ -210,13 +208,12 @@ class AddDependencyApiTestCase(BaseTestCase):
 
 
 class DeleteDependencyApiTestCase(BaseTestCase):
-    """Tests for DELETE /api/v3/checks/<uuid>/dependencies/<uuid>/."""
-
+    """Tests for DELETE /api/v3/checks/<uuid>/dependencies/<uuid>/"""
     def setUp(self):
         super().setUp()
         self.check = Check.objects.create(project=self.project, name="Check A")
         self.dep_check = Check.objects.create(project=self.project, name="Check B")
-        self.dep = CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        self.dep = CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         self.url = f"/api/v3/checks/{self.check.code}/dependencies/{self.dep.code}/"
 
     def _delete(self, url=None, api_key="X" * 32):
@@ -247,15 +244,14 @@ class DeleteDependencyApiTestCase(BaseTestCase):
         """Check from another project should return 403."""
         other = Check.objects.create(project=self.bobs_project, name="Bob")
         other_dep = Check.objects.create(project=self.bobs_project, name="Bob Dep")
-        dep = CheckDependency.objects.create(check=other, depends_on=other_dep)
+        dep = CheckDependency.objects.create(owner=other, depends_on=other_dep)
         url = f"/api/v3/checks/{other.code}/dependencies/{dep.code}/"
         r = self._delete(url=url)
         self.assertEqual(r.status_code, 403)
 
 
 class ListDependenciesApiTestCase(BaseTestCase):
-    """Tests for GET /api/v3/checks/<uuid>/dependencies/."""
-
+    """Tests for GET /api/v3/checks/<uuid>/dependencies/"""
     def setUp(self):
         super().setUp()
         self.check = Check.objects.create(project=self.project, name="Check A")
@@ -277,7 +273,7 @@ class ListDependenciesApiTestCase(BaseTestCase):
 
     def test_get_returns_dependencies(self):
         """GET should list all dependency records."""
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         r = self._get()
         self.assertEqual(len(r.json()["dependencies"]), 1)
 
@@ -306,10 +302,10 @@ class SuppressionTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.check = Check.objects.create(
-            project=self.project, name="Check A", status="up"
+            project=self.project, name="Check A", status="up", last_ping=now()
         )
         self.dep_check = Check.objects.create(
-            project=self.project, name="Check B", status="up"
+            project=self.project, name="Check B", status="up", last_ping=now()
         )
         # Attach a channel so select_channels() can return non-empty
         self.channel = Channel.objects.create(project=self.project, kind="pd")
@@ -330,7 +326,7 @@ class SuppressionTestCase(BaseTestCase):
         """select_channels() should return [] when a dependency is down."""
         self.dep_check.status = "down"
         self.dep_check.save()
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         flip = self._make_flip(old_status="up", new_status="down")
         channels = flip.select_channels()
         self.assertEqual(channels, [], "Expected suppression when dependency is down")
@@ -339,7 +335,7 @@ class SuppressionTestCase(BaseTestCase):
         """select_channels() should return channels when dependency is up."""
         self.dep_check.status = "up"
         self.dep_check.save()
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         flip = self._make_flip(old_status="up", new_status="down")
         channels = flip.select_channels()
         self.assertGreater(len(channels), 0, "Expected channels when dependency is up")
@@ -348,7 +344,7 @@ class SuppressionTestCase(BaseTestCase):
         """select_channels() should return channels when dependency is new."""
         self.dep_check.status = "new"
         self.dep_check.save()
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         flip = self._make_flip(old_status="up", new_status="down")
         channels = flip.select_channels()
         self.assertGreater(len(channels), 0, "Expected channels when dependency is new")
@@ -357,7 +353,7 @@ class SuppressionTestCase(BaseTestCase):
         """select_channels() should return channels when dependency is paused."""
         self.dep_check.status = "paused"
         self.dep_check.save()
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         flip = self._make_flip(old_status="up", new_status="down")
         channels = flip.select_channels()
         self.assertGreater(len(channels), 0, "Expected channels when dependency is paused")
@@ -366,7 +362,7 @@ class SuppressionTestCase(BaseTestCase):
         """Suppression should not apply when new_status is 'up'."""
         self.dep_check.status = "down"
         self.dep_check.save()
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
         # Flip going up — should not be suppressed
         flip = self._make_flip(old_status="down", new_status="up")
         channels = flip.select_channels()
@@ -375,27 +371,27 @@ class SuppressionTestCase(BaseTestCase):
 
     def test_multiple_deps_any_down_suppresses(self):
         """Suppression should trigger if ANY dependency is down."""
-        dep_c = Check.objects.create(project=self.project, name="Check C", status="up")
+        dep_c = Check.objects.create(project=self.project, name="Check C", status="up", last_ping=now())
         self.dep_check.status = "down"
         self.dep_check.save()
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
-        CheckDependency.objects.create(check=self.check, depends_on=dep_c)
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=dep_c)
         flip = self._make_flip(old_status="up", new_status="down")
         channels = flip.select_channels()
         self.assertEqual(channels, [], "Expected suppression when at least one dependency is down")
 
     def test_multiple_deps_all_up_no_suppression(self):
         """No suppression when all dependencies are up."""
-        dep_c = Check.objects.create(project=self.project, name="Check C", status="up")
-        CheckDependency.objects.create(check=self.check, depends_on=self.dep_check)
-        CheckDependency.objects.create(check=self.check, depends_on=dep_c)
+        dep_c = Check.objects.create(project=self.project, name="Check C", status="up", last_ping=now())
+        CheckDependency.objects.create(owner=self.check, depends_on=self.dep_check)
+        CheckDependency.objects.create(owner=self.check, depends_on=dep_c)
         flip = self._make_flip(old_status="up", new_status="down")
         channels = flip.select_channels()
         self.assertGreater(len(channels), 0, "Expected channels when all dependencies are up")
 
 
 class DependencyUrlRoutingTestCase(BaseTestCase):
-    """Tests that dependency endpoints are reachable on all API versions."""
+    """Tests that dependency endpoints are reachable on all API versions"""
 
     def setUp(self):
         super().setUp()

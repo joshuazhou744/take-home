@@ -51,3 +51,6 @@ scratch/
 # CUA server (local dev artifacts)
 assets/templates/browserbase/cua/node_modules/
 assets/templates/browserbase/cua/pnpm-lock.yaml
+
+environments/swe_harbor/tasks/add-bulk-check-actions
+environments/swe_harbor/tasks/add-maintenance-window
